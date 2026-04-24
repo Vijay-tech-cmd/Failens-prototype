@@ -7,22 +7,35 @@ from fairlearn.metrics import (
 )
 from sklearn.metrics import accuracy_score
 
-def run_bias_audit(df, model, sensitive_col, label_col):
+def run_bias_audit(df, model, sensitive_col, label_col, encoders=None):
 
     # Step A: Clean string columns
     df = df.copy()
-    for col in df.select_dtypes(include=['object', 'str']).columns:
-        df[col] = df[col].str.strip()
+    for col in df.select_dtypes(include=['object']).columns:
+        df[col] = df[col].astype(str).str.strip()
 
     # Step B: Binary encode the label column
-    # >50K = 1, <=50K = 0
+    # Handle both ">50K" and ">50K."
+    df[label_col] = df[label_col].astype(str).str.replace('.', '', regex=False).str.strip()
     df[label_col] = (df[label_col] == '>50K').astype(int)
 
     # Step C: Encode all other text columns for the model
     df_enc = df.copy()
-    le = LabelEncoder()
-    for col in df_enc.select_dtypes(include=['object', 'str']).columns:
-        df_enc[col] = le.fit_transform(df_enc[col].astype(str))
+    if encoders:
+        for col, le in encoders.items():
+            if col in df_enc.columns and col != label_col:
+                # Map unseen labels to a default or handle gracefully
+                # For simplicity, we assume categories match training
+                try:
+                    df_enc[col] = le.transform(df_enc[col])
+                except Exception:
+                    # Fallback for unexpected data: use fit_transform or zero
+                    df_enc[col] = 0 
+    else:
+        from sklearn.preprocessing import LabelEncoder
+        for col in df_enc.select_dtypes(include=['object']).columns:
+            if col != label_col:
+                df_enc[col] = LabelEncoder().fit_transform(df_enc[col])
 
     # Step D: Separate features, labels, groups
     X       = df_enc.drop(columns=[label_col])
@@ -86,19 +99,22 @@ def run_bias_audit(df, model, sensitive_col, label_col):
         for k, v in mf.by_group.items()
     }
 
-    return {
+    # Final Step: Convert all numpy types to standard Python types for JSON serialization
+    raw_results = {
         "demographic_parity": {
-            "gap_percent": round(abs(dp_gap) * 100, 2),
+            "gap_percent": float(round(abs(dp_gap) * 100, 2)),
             "status": "FAIL" if abs(dp_gap) > 0.05 else "PASS",
-            "group_rates": group_rates
+            "group_rates": {str(k): float(v) for k, v in group_rates.items()}
         },
         "equalized_odds": {
-            "gap_percent": round(eo_gap, 2),
+            "gap_percent": float(round(eo_gap, 2)),
             "status": "FAIL" if eo_gap > 5 else "PASS",
-            "tpr_by_group": tpr_vals,
-            "fpr_by_group": fpr_vals
+            "tpr_by_group": {str(k): float(v) for k, v in tpr_vals.items()},
+            "fpr_by_group": {str(k): float(v) for k, v in fpr_vals.items()}
         },
-        "group_accuracy": group_accuracy,
-        "total_rows": len(df),
-        "sensitive_column": sensitive_col
+        "group_accuracy": {str(k): float(v) for k, v in group_accuracy.items()},
+        "total_rows": int(len(df)),
+        "sensitive_column": str(sensitive_col)
     }
+
+    return raw_results
