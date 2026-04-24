@@ -21,15 +21,15 @@ export default function App() {
     const form = new FormData();
     form.append("dataset", dataset);
     form.append("model_file", modelFile);
-    form.append("sensitive_col", "gender");
-    form.append("label_col", "income");
     form.append("sensitive_col", sensitiveCol);
+    form.append("label_col", "income");
 
     try{
       const res = await axios.post("https://fairlens-api-5ek1.onrender.com/audit", form);
       setResults(res.data);
     }catch(err){
-      setError("Audit failed. Is your backend running?");
+      console.error("Audit error:", err);
+      setError(err.response?.data?.error || "Audit failed. Check backend connectivity or file formats.");
     }
     setLoading(false);
   };

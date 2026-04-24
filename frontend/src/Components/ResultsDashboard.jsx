@@ -39,7 +39,7 @@ export default function ResultsDashboard({ results }) {
                 <h3 style={{ margin: "0 0 10px" }}>
                     AI Audit Report
                 </h3>
-                <p style={{ lineHeight: 1.7, margin: 0 }}>
+                <p style={{ lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
                     {results.ai_report}
                 </p>
             </div>
