@@ -37,11 +37,10 @@ def generate_bias_report(audit_results: dict) -> str:
     Keep it concise (150-200 words). Do not use bullet points or code. Use plain text only.
     """
 
+    # Keep it to only the 2 most reliable models to avoid 502 timeouts on Render
     models_to_try = [
         "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-pro",
-        "gemini-1.0-pro"
+        "gemini-1.5-flash-latest"
     ]
     
     last_errors = []
