@@ -10,12 +10,30 @@ from bias_engine import run_bias_audit
 
 app = FastAPI(title="FairLens API")
 
+# Define allowed origins
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://failens-prototype.vercel.app",
+    "https://fairlens-prototype.vercel.app",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={"error": str(exc)},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
 
 @app.get("/")
 def home():
@@ -45,9 +63,9 @@ async def audit(
     elif s_col_lower == 'sex' and 'gender' in actual_cols:
         sensitive_col = actual_cols['gender']
     else:
-        return JSONResponse(
+        raise HTTPException(
             status_code=400, 
-            content={"error": f"Sensitive column '{sensitive_col}' not found. Available: {list(df.columns)}"}
+            detail=f"Sensitive column '{sensitive_col}' not found. Available: {list(df.columns)}"
         )
 
     # Check Label Column
@@ -63,9 +81,9 @@ async def audit(
         if l_col_lower == 'income' and 'target' in actual_cols:
             label_col = actual_cols['target']
         else:
-            return JSONResponse(
+            raise HTTPException(
                 status_code=400, 
-                content={"error": f"Label column '{label_col}' not found. Available: {list(df.columns)}"}
+                detail=f"Label column '{label_col}' not found. Available: {list(df.columns)}"
             )
     
     # Load model bundle (could be dict with encoders or just model)

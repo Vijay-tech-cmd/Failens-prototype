@@ -4,39 +4,42 @@ import os
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def generate_bias_report(audit_results: dict) -> str:
+    # Ensure environment variables are loaded if not already
+    load_dotenv()
+    api_key = os.getenv("GEMINI_API_KEY")
+    
+    if not api_key:
+        return "AI report generation failed: GEMINI_API_KEY not found in environment."
+
+    try:
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        return f"AI report generation failed to initialize client: {str(e)}"
+
     dp = audit_results.get("demographic_parity", {})
     eo = audit_results.get("equalized_odds", {})
     grps = dp.get("group_rates", {})
 
     prompt = f"""
-    You are a responsible AI auditor writing a report for a non-technical business audience.
+    You are a professional AI auditor. Analyze these bias audit metrics and write a clear, 3-paragraph summary for a business audience.
+    
+    - Demographic Parity Gap: {dp.get('gap_percent')}% (Status: {dp.get('status')})
+    - Group Approval Rates: {grps}
+    - Equalized Odds Gap: {eo.get('gap_percent')}% (Status: {eo.get('status')})
 
-    BIAS AUDIT REPORT:
-    -Demographic Parity Gap: {dp.get('gap_percent')} % Status: {dp.get('status')} Approval rates by group: {grps}
-    -Equalized Odds Status: {eo.get('gap_percent')} % Status: {eo.get('status')}
+    Structure your report:
+    Paragraph 1: Summary of the findings in simple terms.
+    Paragraph 2: Potential real-world ethical risks if this model is used.
+    Paragraph 3: Recommendations for the data science team.
 
-    Write a SHORT audit report with exactly 3 paragraphs:
-    1. What the audit found (plain English, no jargon)
-    2. Why this matters (real-world harm if deployed)
-    3. Top 2 fixes the team should implement
+    Keep it concise (150-200 words). Do not use bullet points or code. Use plain text only.
+    """
 
-    Keep it under 180 words. Be direct. No bullet points.
-"""
-
-    # Try multiple common model names in case one is restricted or missing
     models_to_try = [
-        "gemini-1.5-flash-latest",
         "gemini-1.5-flash",
-        "gemini-pro",
         "gemini-1.5-pro",
-        "gemini-2.5-flash",
-        "gemini-2.5-pro",
-        "gemini-2.0-flash",
-        "gemini-2.0-pro"
-
     ]
     
     last_error = "Unknown error"
@@ -46,9 +49,10 @@ def generate_bias_report(audit_results: dict) -> str:
                 model=model_name,
                 contents=prompt
             )
-            return response.text
+            if response and response.text:
+                return response.text
         except Exception as e:
             last_error = str(e)
             continue
             
-    raise Exception(f"All models failed. Last error: {last_error}")
+    return f"AI report generation failed. (Model error: {last_error})"
