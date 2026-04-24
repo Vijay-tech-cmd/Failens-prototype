@@ -39,12 +39,19 @@ def generate_bias_report(audit_results: dict) -> str:
 
     models_to_try = [
         "gemini-1.5-flash",
-        "gemini-1.5-pro",
+        "gemini-pro",
+        "gemini-1.5-flash-002",
+        "gemini-1.5-pro-latest",
+        "gemini-2.0-flash-exp",
+        "gemini-2.0-pro-exp",
+        "gemini-2.5-flash",
+        "gemini-2.5-pro"
     ]
     
-    last_error = "Unknown error"
+    last_errors = []
     for model_name in models_to_try:
         try:
+            print(f"Trying model: {model_name}...")
             response = client.models.generate_content(
                 model=model_name,
                 contents=prompt
@@ -52,8 +59,9 @@ def generate_bias_report(audit_results: dict) -> str:
             if response and response.text:
                 return response.text
         except Exception as e:
-            print(f"Error with {model_name}: {e}")
-            last_error = str(e)
+            err_msg = str(e)
+            print(f"Failed with {model_name}: {err_msg}")
+            last_errors.append(f"{model_name}: {err_msg}")
             continue
             
-    return f"AI report generation currently unavailable. (Reason: {last_error}). You can still review the statistical metrics above."
+    return f"AI report generation unavailable. Tried models: {', '.join(last_errors)}. Please check your Google AI Studio quota or API key status."
