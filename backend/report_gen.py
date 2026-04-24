@@ -39,13 +39,9 @@ def generate_bias_report(audit_results: dict) -> str:
 
     models_to_try = [
         "gemini-1.5-flash",
-        "gemini-pro",
-        "gemini-1.5-flash-002",
-        "gemini-1.5-pro-latest",
-        "gemini-2.0-flash-exp",
-        "gemini-2.0-pro-exp",
-        "gemini-2.5-flash",
-        "gemini-2.5-pro"
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro",
+        "gemini-1.0-pro"
     ]
     
     last_errors = []
