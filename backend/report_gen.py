@@ -52,7 +52,8 @@ def generate_bias_report(audit_results: dict) -> str:
             if response and response.text:
                 return response.text
         except Exception as e:
+            print(f"Error with {model_name}: {e}")
             last_error = str(e)
             continue
             
-    return f"AI report generation failed. (Model error: {last_error})"
+    return f"AI report generation currently unavailable. (Reason: {last_error}). You can still review the statistical metrics above."

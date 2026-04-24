@@ -76,13 +76,32 @@ export default function App() {
           <option value="relationship">Relationship</option>
         </select>
       </div>
-      <button onClick={runAudit} disabled={loading} style={{ padding: "10px 24px", fontSize: 15, cursor: "pointer", background: "#111", color: "#fff", border: "none", borderRadius: 8 }}>
-        {loading ? "Analyzing..." : "Run Bias Audit"}
+      <button onClick={runAudit} disabled={loading} style={{ padding: "12px 28px", fontSize: 16, cursor: loading ? "not-allowed" : "pointer", background: loading ? "#666" : "#111", color: "#fff", border: "none", borderRadius: 8, transition: "all 0.2s" }}>
+        {loading ? "Analyzing Bias..." : "Run Bias Audit"}
       </button>
 
-      {error && <p style={{ color: "red", marginTop: 20 }}>{error}</p>}
+      {loading && (
+        <div style={{ marginTop: 24, padding: 20, background: "#f0f7ff", borderRadius: 10, border: "1px solid #cce3ff", textAlign: 'center' }}>
+          <p style={{ margin: 0, color: "#0056b3", fontWeight: 600 }}>
+            Audit in progress...
+          </p>
+          <p style={{ margin: "5px 0 0", fontSize: 13, color: "#666" }}>
+            We're computing fairness metrics and generating your AI audit report. This usually takes 15–30 seconds.
+          </p>
+        </div>
+      )}
 
-      {results && <ResultsDashboard results={results} />}
+      {error && (
+        <div style={{ marginTop: 20, padding: 16, borderRadius: 8, background: "#fff5f5", border: "1px solid #feb2b2", color: "#c53030", fontSize: 14 }}>
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {results && (
+        <div style={{ marginTop: 32 }}>
+          <ResultsDashboard results={results} />
+        </div>
+      )}
     </div>
   );
 }

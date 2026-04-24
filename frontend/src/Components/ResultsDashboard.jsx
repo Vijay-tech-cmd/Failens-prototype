@@ -40,7 +40,7 @@ export default function ResultsDashboard({ results }) {
                     AI Audit Report
                 </h3>
                 <p style={{ lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
-                    {results.ai_report}
+                    {results.ai_report || "The AI report is temporarily unavailable for this audit. Please try again or check the backend configuration."}
                 </p>
             </div>
         </div>
