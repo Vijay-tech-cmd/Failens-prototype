@@ -26,7 +26,7 @@ export default function App() {
     form.append("sensitive_col", sensitiveCol);
 
     try{
-      const res = await axios.post("http://localhost:8000/audit", form);
+      const res = await axios.post("https://fairlens-api-5ek1.onrender.com/audit", form);
       setResults(res.data);
     }catch(err){
       setError("Audit failed. Is your backend running?");
