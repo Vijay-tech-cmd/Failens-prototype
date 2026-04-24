@@ -40,7 +40,9 @@ def generate_bias_report(audit_results: dict) -> str:
     # Keep it to only the 2 most reliable models to avoid 502 timeouts on Render
     models_to_try = [
         "gemini-1.5-flash",
-        "gemini-1.5-flash-latest"
+        "gemini-1.5-flash-latest",
+        "gemini-2.5-flash",
+        "gemini-2.5-pro"
     ]
     
     last_errors = []
